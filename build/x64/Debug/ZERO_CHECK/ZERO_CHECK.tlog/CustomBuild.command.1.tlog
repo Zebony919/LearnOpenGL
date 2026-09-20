@@ -1,0 +1,10 @@
+^C:\USERS\PLAYTECH\DOCUMENTS\VISUAL STUDIO PROJECTS\LEARNOPENGL\BUILD\CMAKEFILES\1B56487E8D0B4A1340FFAAB2C90FEE12\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/Users/Playtech/Documents/Visual Studio Projects/LearnOpenGL" "-BC:/Users/Playtech/Documents/Visual Studio Projects/LearnOpenGL/build" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "C:/Users/Playtech/Documents/Visual Studio Projects/LearnOpenGL/build/LearnOpenGL.sln"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,0 +1,3 @@
+C:/Users/Playtech/Documents/Visual Studio Projects/LearnOpenGL/build/CMakeFiles/LearnOpenGL.dir
+C:/Users/Playtech/Documents/Visual Studio Projects/LearnOpenGL/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Playtech/Documents/Visual Studio Projects/LearnOpenGL/build/CMakeFiles/ZERO_CHECK.dir
