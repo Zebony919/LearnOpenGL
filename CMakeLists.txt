@@ -29,3 +29,20 @@ add_custom_command(TARGET LearnOpenGL POST_BUILD
     "${CMAKE_SOURCE_DIR}/glfw3.dll"
     $<TARGET_FILE_DIR:LearnOpenGL>
 )
+
+# Copy glfw3.dll to binary folder
+add_custom_command(TARGET LearnOpenGL POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/glfw3.dll"
+    $<TARGET_FILE_DIR:LearnOpenGL>
+)
+
+# Copy shader files directly into the executable output directory
+add_custom_command(TARGET LearnOpenGL POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/src/shader.vs"
+    $<TARGET_FILE_DIR:LearnOpenGL>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/src/shader.fs"
+    $<TARGET_FILE_DIR:LearnOpenGL>
+)
