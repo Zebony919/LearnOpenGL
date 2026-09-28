@@ -214,6 +214,14 @@ int main()
         ourShader.setFloat("mixFactor", mixFactor);
 
         // Matrices
+        // Camera
+        glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 3.0f);
+        glm::vec3 camTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 camDir = glm::normalize(camPos - camTarget);
+
+        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::vec3 camRight = glm::normalize(glm::cross(up, camDir));
+        glm::vec3 camUp = glm::normalize(glm::cross(camDir, camRight));
 
         // Model
         glm::mat4 model = glm::mat4(1.0f);
@@ -221,7 +229,7 @@ int main()
 
         // View
         glm::mat4 view = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        // view = glm::lookAt(camPos, camTarget, up);
 
         // Projection
         glm::mat4 projection;
@@ -231,7 +239,7 @@ int main()
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
         int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        // glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
         int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
@@ -244,6 +252,13 @@ int main()
 
         ourShader.use();
         glBindVertexArray(VAO);
+
+        // Camera Rotation
+        const float radius = 10.0f;
+        float camX = static_cast<float>(sin(glfwGetTime()) * radius);
+        float camZ = static_cast<float>(cos(glfwGetTime()) * radius);
+        view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     
         for (unsigned int i = 0; i < 10; i++) {
             glm::mat4 model = glm::mat4(1.0f);
@@ -251,9 +266,10 @@ int main()
 
             float angle = 20.0f * i;
 
-            model = (i % 3 == 0) ? glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f)) : 
-                                   glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            // model = (i % 3 == 0) ? glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f)) : 
+            //                       glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
+            // model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
