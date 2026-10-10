@@ -5,44 +5,42 @@ project(LearnOpenGL C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Include directories
-include_directories(
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/glm-1.0.3/glm
-)
+cmake_minimum_required(VERSION 3.10)
+project(LearnOpenGL LANGUAGES C CXX)
 
-# Find OpenGL library (system dependency)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(FetchContent)
+
+FetchContent_Declare(
+    glm
+    URL https://github.com/g-truc/glm/archive/refs/tags/1.0.1.tar.gz
+)
+FetchContent_MakeAvailable(glm)
+
 find_package(OpenGL REQUIRED)
 
-# Add executable with source files
 add_executable(LearnOpenGL
     src/main.cpp
     src/glad.c
 )
 
+target_include_directories(LearnOpenGL PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${glm_SOURCE_DIR}
+)
 
-# Link GLFW library (using lib/libglfw3dll.a) and OpenGL
-target_link_libraries(LearnOpenGL
+target_link_libraries(LearnOpenGL PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/libglfw3dll.a
     OpenGL::GL
 )
 
-# Post-build step: Copy glfw3.dll to output directory so the executable can run
 add_custom_command(TARGET LearnOpenGL POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_SOURCE_DIR}/glfw3.dll"
     $<TARGET_FILE_DIR:LearnOpenGL>
-)
-
-# Copy glfw3.dll to binary folder
-add_custom_command(TARGET LearnOpenGL POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/glfw3.dll"
-    $<TARGET_FILE_DIR:LearnOpenGL>
-)
-
-# Copy shader files directly into the executable output directory
-add_custom_command(TARGET LearnOpenGL POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_SOURCE_DIR}/src/shader.vs"
     $<TARGET_FILE_DIR:LearnOpenGL>

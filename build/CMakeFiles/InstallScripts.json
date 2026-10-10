@@ -1,7 +1,9 @@
 {
 	"InstallScripts" : 
 	[
-		"C:/Users/zebon/VSCODE/LearnOpenGL/build/cmake_install.cmake"
+		"C:/Users/Playtech/Documents/Visual Studio Projects/LearnOpenGL/build/cmake_install.cmake",
+		"C:/Users/Playtech/Documents/Visual Studio Projects/LearnOpenGL/build/_deps/glm-build/cmake_install.cmake",
+		"C:/Users/Playtech/Documents/Visual Studio Projects/LearnOpenGL/build/_deps/glm-build/glm/cmake_install.cmake"
 	],
 	"Parallel" : false
 }
