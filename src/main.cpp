@@ -12,7 +12,7 @@
 
 // Defined Uniforms
 float xOffset = 0.5f;
-float mixFactor = 0.5f;
+float mixFactor = 0.0f;
 
 // Camera
 glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -25,7 +25,7 @@ float lastFrame = 0.0f;
 float fov = 45.0f;
 float yaw = -90.0f;
 float pitch = 0.0f;
-float lastX = 400, lastY = 300;
+double lastX = 400, lastY = 300;
 bool firstMouse = true;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -39,8 +39,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
         firstMouse = false;
     }
 
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
+    float xoffset = static_cast<float>(xpos - lastX);
+    float yoffset = static_cast<float>(lastY - ypos);
     lastX = xpos;
     lastY = ypos;
 
@@ -94,9 +94,11 @@ void process_input(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camPos -= cameraSpeed * camFront;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camPos -= glm::normalize(glm::cross(camFront, camUp)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camPos += glm::normalize(glm::cross(camFront, camUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) camPos += cameraSpeed * camUp;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) camPos -= cameraSpeed * camUp;
 }
 
-float vertices[] = {
+float box[] = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
      0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
@@ -153,10 +155,40 @@ glm::vec3 cubePositions[] = {
     glm::vec3(-1.3f,  1.0f, -1.5f)  
 };
 
-unsigned int indicies[] = {  // note that we start from 0!
-    1, 2, 3,   // second triangle
-    0, 1, 3,   // first triangle    
-}; 
+float wall[] = {
+    -1.0f, -1.0f,  0.5f,  0.0f, 0.0f, // Bottom Left
+     1.0f, -1.0f,  0.5f,  1.0f, 0.0f, // Bottom Right
+     1.0f,  1.0f,  0.5f,  1.0f, 1.0f, // Top Right
+
+     1.0f,  1.0f,  0.5f,  1.0f, 1.0f, // Top Right
+    -1.0f,  1.0,   0.5f,  0.0f, 1.0f, // Top Left
+    -1.0f, -1.0f,  0.5f,  0.0f, 0.0f, // Bottom left
+};
+
+glm::vec4 wallPositions[] = {
+    // Left Wall
+    glm::vec4( 0.0f,  0.0f,   0.0f, 90.0f), 
+    glm::vec4( 0.0f,  0.0f,  -2.0f, 90.0f),
+    glm::vec4( 0.0f,  0.0f,  -4.0f, 90.0f),
+
+    // Back Wall
+    glm::vec4( 1.5f,  0.0f,  -5.5f, 0.0f),
+    glm::vec4( 3.5f,  0.0f,  -5.5f, 0.0f),
+    glm::vec4( 5.5f,  0.0f,  -5.5f, 0.0f),
+
+    // Right Wall
+    glm::vec4( 2.0f,  0.0f,   0.0f, 90.0f),
+    glm::vec4( 2.0f,  0.0f,  -2.0f, 90.0f),
+
+    glm::vec4( 3.5f,  0.0f,  -3.5f, 0.0f),
+    glm::vec4( 5.5f,  0.0f,  -3.5f, 0.0f),
+    
+    glm::vec4( 2.0f,  5.0f, -15.0f, 40.0f), 
+    glm::vec4(-1.5f, -2.2f, -2.5f, 20.0f),  
+    glm::vec4(-3.8f, -2.0f, -12.3f, 100.0f), 
+};
+
+unsigned int wallCount = 12;
 
 int main()
 {
@@ -195,7 +227,7 @@ int main()
     unsigned int VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(wall), wall, GL_STATIC_DRAW);
 
     // Vertex Attributes Pointers
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -205,11 +237,13 @@ int main()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    /*
     // Element Buffer Object
     unsigned int EBO;
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
+    */
 
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -274,14 +308,14 @@ int main()
         ourShader.setFloat("mixFactor", mixFactor);
 
         // Delta Time
-        float currentFrame = glfwGetTime();
+        float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
         // Matrices
         // Model
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 
         // View
         // glm::mat4 view = glm::mat4(1.0f);
@@ -308,7 +342,20 @@ int main()
         ourShader.use();
         glBindVertexArray(VAO);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+        for (unsigned int i = 0; i < wallCount; i++) {
+            glm::vec3 position = glm::vec3(wallPositions[i].x, wallPositions[i].y, wallPositions[i].z);
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, position);
+
+            float angle = wallPositions[i].w;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
     
+        /*
         for (unsigned int i = 0; i < 10; i++) {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
@@ -316,6 +363,7 @@ int main()
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+        */
 
         glfwSwapBuffers(window);
         glfwPollEvents();
