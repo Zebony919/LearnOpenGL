@@ -95,6 +95,10 @@ class Shader {
         void setFloat(const std::string &name, float value) const { 
             glUniform1f(glGetUniformLocation(ID, name.c_str()), value); 
         };
+
+        void setVec3(const std::string &name, float x, float y, float z) {
+            glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
+        }
 };
 
 #endif

@@ -73,7 +73,7 @@ void process_input(GLFWwindow* window) {
     }
 
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        mixFactor += 0.01f;
+        mixFactor += 0.001f;
 
         if (mixFactor > 1.0f) {
             mixFactor = 1.0f;
@@ -81,7 +81,7 @@ void process_input(GLFWwindow* window) {
     }
 
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        mixFactor -= 0.01f;
+        mixFactor -= 0.001f;
 
         if (mixFactor < 0.0f) {
             mixFactor = 0.0f;
@@ -155,6 +155,7 @@ glm::vec3 cubePositions[] = {
     glm::vec3(-1.3f,  1.0f, -1.5f)  
 };
 
+unsigned int wallCount = 12;
 float wall[] = {
     -1.0f, -1.0f,  0.5f,  0.0f, 0.0f, // Bottom Left
      1.0f, -1.0f,  0.5f,  1.0f, 0.0f, // Bottom Right
@@ -188,7 +189,49 @@ glm::vec4 wallPositions[] = {
     glm::vec4(-3.8f, -2.0f, -12.3f, 100.0f), 
 };
 
-unsigned int wallCount = 12;
+float lightCubes[] = {
+    -0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+    -0.5f,  0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+
+    -0.5f, -0.5f,  0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+    -0.5f, -0.5f,  0.5f,
+
+    -0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+
+    -0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f, -0.5f,  0.5f,
+    -0.5f, -0.5f,  0.5f,
+    -0.5f, -0.5f, -0.5f,
+
+    -0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f, -0.5f
+};
 
 int main()
 {
@@ -227,15 +270,11 @@ int main()
     unsigned int VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(wall), wall, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(lightCubes), lightCubes, GL_STATIC_DRAW);
 
     // Vertex Attributes Pointers
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
-    // Texture coords
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
 
     /*
     // Element Buffer Object
@@ -291,8 +330,8 @@ int main()
 
     Shader ourShader("src/shader.vs", "src/shader.fs");
     ourShader.use();
-    ourShader.setInt("texture1", 0);
-    ourShader.setInt("texture2", 1);
+    ourShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+    ourShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -343,6 +382,9 @@ int main()
         glBindVertexArray(VAO);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        /*
         for (unsigned int i = 0; i < wallCount; i++) {
             glm::vec3 position = glm::vec3(wallPositions[i].x, wallPositions[i].y, wallPositions[i].z);
             glm::mat4 model = glm::mat4(1.0f);
@@ -354,6 +396,7 @@ int main()
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
+        */
     
         /*
         for (unsigned int i = 0; i < 10; i++) {
