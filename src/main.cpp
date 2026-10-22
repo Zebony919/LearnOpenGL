@@ -276,6 +276,16 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
+    // LightVAO
+    unsigned int lightVAO;
+    glGenVertexArrays(1, &lightVAO);
+    glBindVertexArray(lightVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
     /*
     // Element Buffer Object
     unsigned int EBO;
@@ -329,9 +339,8 @@ int main()
     stbi_image_free(data);
 
     Shader ourShader("src/shader.vs", "src/shader.fs");
-    ourShader.use();
-    ourShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-    ourShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
+    Shader lightShader("src/lightShader.vs", "src/lightShader.fs");
+    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -364,25 +373,29 @@ int main()
         glm::mat4 projection;
         projection = glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
 
-        int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-        int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-
-        int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);        
-
         ourShader.use();
-        glBindVertexArray(VAO);
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        ourShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        ourShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
 
+        ourShader.setMat4("model", model);
+        ourShader.setMat4("projection", projection);
+        ourShader.setMat4("view", view);
+
+        glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        // Light Soucre cube
+        lightShader.use();
+        lightShader.setMat4("view", view);
+        lightShader.setMat4("projection", projection);
+        model = glm::mat4(1.0);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f));
+        lightShader.setMat4("model", model);
+
+        glBindVertexArray(lightVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        
 
         /*
         for (unsigned int i = 0; i < wallCount; i++) {
@@ -407,6 +420,14 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         */
+
+        /*
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);    
+        */    
 
         glfwSwapBuffers(window);
         glfwPollEvents();

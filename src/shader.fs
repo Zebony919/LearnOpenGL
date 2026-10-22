@@ -10,5 +10,5 @@ uniform float mixFactor;
 
 void main()
 {
-    FragColor = vec3(objectColor * objectColor, 1.0);
+    FragColor = vec4(objectColor * objectColor, 1.0);
 }
