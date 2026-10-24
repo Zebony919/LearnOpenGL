@@ -14,6 +14,7 @@
 // Defined Uniforms
 float xOffset = 0.5f;
 float mixFactor = 0.0f;
+float pause = 1.0f;
 
 // Camera
 float fov = 45.0f;
@@ -99,6 +100,7 @@ void process_input(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) cam.setPos(cam.getPos() + (glm::normalize(glm::cross(cam.getFront(), cam.getUp())) * cameraSpeed));
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) cam.setPos(cam.getPos() + (cameraSpeed * cam.getUp()));
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) cam.setPos(cam.getPos() - (cameraSpeed * cam.getUp()));
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) pause = pause == 1.0f ? 0.0f : 1.0f;
 }
 
 float box[] = {
@@ -400,7 +402,7 @@ int main()
     while (!glfwWindowShouldClose(window)) {
         process_input(window);
 
-        glClearColor(0.3f, 0.5f, 0.3f, 1.0f);
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Bind Uniforms
@@ -426,10 +428,26 @@ int main()
         projection = glm::perspective(glm::radians(cam.getFov()), 800.0f / 600.0f, 0.1f, 100.0f);
 
         ourShader.use();
-        ourShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-        ourShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
-        ourShader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
-        ourShader.setVec3("camPos", cam.getPos().x, cam.getPos().y, cam.getPos().z);
+        ourShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+        ourShader.setVec3("material.ambient", glm::vec3(0.5f, 0.5f, 0.31f));
+        ourShader.setVec3("material.diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+        ourShader.setVec3("material.specular", glm::vec3(1.0f, 1.0f, 0.5f));
+        ourShader.setFloat("material.shineness", 32.0f);
+
+        glm::vec3 lightColor;
+        lightColor.x = sin(glfwGetTime() * 2.0f);
+        lightColor.y = sin(glfwGetTime() * 0.7f);
+        lightColor.z = sin(glfwGetTime() * 1.3f);
+
+        glm::vec3 diffuseColor = lightColor * glm::vec3(0.8f);
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+
+        ourShader.setVec3("light.ambient", ambientColor);
+        ourShader.setVec3("light.diffuse", diffuseColor);
+        ourShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        ourShader.setVec3("lightPos", lightPos);
+        ourShader.setVec3("camPos", cam.getPos());
 
         ourShader.setMat4("model", model);
         ourShader.setMat4("projection", projection);
@@ -439,45 +457,24 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // Light Soucre cube
-        lightPos.x = (float) cos(glfwGetTime()) * 2.0f;
-        lightPos.z = (float) sin(glfwGetTime()) * 2.0f;
+        if (!pause) lightPos.x = (float) cos(glfwGetTime()) * 2.0f;
+        else lightPos.x = (float) 2.0f;
+
+        if (!pause) lightPos.z = (float) sin(glfwGetTime()) * 2.0f;
+        else lightPos.z = (float) 2.0f;
 
         model = glm::mat4(1.0);
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
 
         lightShader.use();
+        lightShader.setVec3("boxColor", lightColor);
         lightShader.setMat4("view", view);
         lightShader.setMat4("projection", projection);
         lightShader.setMat4("model", model);
 
         glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
-        
-
-        /*
-        for (unsigned int i = 0; i < wallCount; i++) {
-            glm::vec3 position = glm::vec3(wallPositions[i].x, wallPositions[i].y, wallPositions[i].z);
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, position);
-
-            float angle = wallPositions[i].w;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
-
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
-        */
-    
-        /*
-        for (unsigned int i = 0; i < 10; i++) {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        */
 
         /*
         glActiveTexture(GL_TEXTURE0);
