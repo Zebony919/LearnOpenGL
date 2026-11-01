@@ -15,6 +15,7 @@
 float xOffset = 0.5f;
 float mixFactor = 0.0f;
 float pause = 1.0f;
+float toggleFlash = 0.0f;
 
 // Camera
 float fov = 45.0f;
@@ -101,6 +102,7 @@ void process_input(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) cam.setPos(cam.getPos() + (cameraSpeed * cam.getUp()));
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) cam.setPos(cam.getPos() - (cameraSpeed * cam.getUp()));
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) pause = pause == 1.0f ? 0.0f : 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) toggleFlash = toggleFlash == 1.0? 0.0f : 1.0f;
 }
 
 float box[] = {
@@ -415,7 +417,14 @@ int main()
     while (!glfwWindowShouldClose(window)) {
         process_input(window);
 
-        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        // Light source position
+        if (!pause) lightPos.x = (float)cos(glfwGetTime()) * 2.0f;
+        else lightPos.x = 2.0f;
+
+        if (!pause) lightPos.z = (float)sin(glfwGetTime()) * 2.0f;
+        else lightPos.z = 2.0f;
+
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Bind Uniforms
@@ -447,17 +456,34 @@ int main()
         ourShader.setInt("material.specular", 1);
         ourShader.setFloat("material.shineness", 32.0f);
 
-        glm::vec3 lightColor(1.0f);
+        glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
         glm::vec3 diffuseColor = lightColor * glm::vec3(0.8f);
         glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
 
-        ourShader.setVec3("light.ambient", ambientColor);
-        ourShader.setVec3("light.diffuse", diffuseColor);
-        ourShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+        ourShader.setVec3("sunLight.ambient", ambientColor);
+        ourShader.setVec3("sunLight.diffuse", diffuseColor);
+        ourShader.setVec3("sunLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
-        ourShader.setVec3("lightPos", lightPos);
+        ourShader.setVec3("sourceLight.ambient", ambientColor);
+        ourShader.setVec3("sourceLight.diffuse", diffuseColor);
+        ourShader.setVec3("sourceLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        ourShader.setFloat("sourceLight.constant", 1.0f);
+        ourShader.setFloat("sourceLight.linear", 0.09f);
+        ourShader.setFloat("sourceLight.quadratic", 0.032f);
+
+        ourShader.setVec3("sunLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+        ourShader.setVec3("sourceLight.position", lightPos);
         ourShader.setVec3("camPos", cam.getPos());
+
+        ourShader.setVec3("flashLight.position", cam.getPos());
+        ourShader.setVec3("flashLight.direction", cam.getFront());
+        ourShader.setFloat("flashLight.radius", glm::cos(glm::radians(12.5f)));
+
+        if (toggleFlash) {
+            ourShader.setFloat("toggleFlash", 1.0f);
+        }
 
         ourShader.setMat4("model", model);
         ourShader.setMat4("projection", projection);
@@ -471,15 +497,18 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texture2);
 
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        // Light Soucre cube
-        if (!pause) lightPos.x = (float) cos(glfwGetTime()) * 2.0f;
-        else lightPos.x = (float) 2.0f;
+        for(unsigned int i = 0; i < 10; i++) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            ourShader.setMat4("model", model);
 
-        if (!pause) lightPos.z = (float) sin(glfwGetTime()) * 2.0f;
-        else lightPos.z = (float) 2.0f;
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        };
 
+        // Light Source cube
         model = glm::mat4(1.0);
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
