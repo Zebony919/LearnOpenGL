@@ -29,6 +29,7 @@ struct FlashLight {
     vec3 position;
     vec3 direction;
     float radius;
+    float outerRadius;
 };
 uniform FlashLight flashLight;
 
@@ -42,6 +43,8 @@ uniform float toggleFlash;
 void main()
 {
     float theta = dot(normalize(camPos - FragPos), normalize(-flashLight.direction));
+    float epsilon = flashLight.radius - flashLight.outerRadius;
+    float intensity = clamp((theta - flashLight.outerRadius) / epsilon, 0.0, 1.0);
 
     float distance = length(sourceLight.position - FragPos);
     float attenuation = 1.0 / (sourceLight.constant + sourceLight.linear * distance + 
@@ -63,9 +66,12 @@ void main()
     diffuse *= attenuation;
     specular *= attenuation;
 
+    diffuse *= intensity;
+    specular *= intensity;
+
     if ((theta > flashLight.radius) && (toggleFlash == 1.0f)) {
-        ambient = min(ambient * 1.7, 1.0);
-        diffuse = min(diffuse * 1.7, 1.0);
+        ambient = ambient * 1.9;
+        diffuse = diffuse * 1.9;
     };
 
     vec3 result = (ambient + diffuse + specular);

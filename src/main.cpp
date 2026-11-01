@@ -15,7 +15,8 @@
 float xOffset = 0.5f;
 float mixFactor = 0.0f;
 float pause = 1.0f;
-float toggleFlash = 0.0f;
+float toggleFlash = 1.0f;
+float lightAngle = 0.0f;
 
 // Camera
 float fov = 45.0f;
@@ -101,8 +102,16 @@ void process_input(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) cam.setPos(cam.getPos() + (glm::normalize(glm::cross(cam.getFront(), cam.getUp())) * cameraSpeed));
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) cam.setPos(cam.getPos() + (cameraSpeed * cam.getUp()));
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) cam.setPos(cam.getPos() - (cameraSpeed * cam.getUp()));
-    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) pause = pause == 1.0f ? 0.0f : 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) toggleFlash = toggleFlash == 1.0? 0.0f : 1.0f;
+    
+    static bool pWasDown = false;
+    const bool pIsDown = glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS;
+    if (pWasDown && !pIsDown) pause = pause == 1.0f ? 0.0f : 1.0f;
+    pWasDown = pIsDown;
+
+    static bool fWasDown = false;
+    const bool fIsDown = glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS;
+    if (fWasDown && !fIsDown) toggleFlash = toggleFlash == 1.0 ? 0.0f : 1.0f;
+    fWasDown = fIsDown;
 }
 
 float box[] = {
@@ -409,20 +418,13 @@ int main()
 
     Shader ourShader("src/shader.vs", "src/shader.fs");
     Shader lightShader("src/lightShader.vs", "src/lightShader.fs");
-    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+    glm::vec3 lightPos(1.2f, 1.0f, -2.0f);
 
     glEnable(GL_DEPTH_TEST);
 
     // Rendering Loop
     while (!glfwWindowShouldClose(window)) {
         process_input(window);
-
-        // Light source position
-        if (!pause) lightPos.x = (float)cos(glfwGetTime()) * 2.0f;
-        else lightPos.x = 2.0f;
-
-        if (!pause) lightPos.z = (float)sin(glfwGetTime()) * 2.0f;
-        else lightPos.z = 2.0f;
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -435,6 +437,14 @@ int main()
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        // Light source position
+        if (!pause) {
+            lightAngle += 1.0f * deltaTime;
+        }
+
+        lightPos.x = std::cos(lightAngle) * 4.0f;
+        lightPos.z = std::cos(lightAngle) * 4.0f;
 
         // Matrices
         // Model
@@ -480,9 +490,12 @@ int main()
         ourShader.setVec3("flashLight.position", cam.getPos());
         ourShader.setVec3("flashLight.direction", cam.getFront());
         ourShader.setFloat("flashLight.radius", glm::cos(glm::radians(12.5f)));
+        ourShader.setFloat("flashLight.outerRadius", glm::cos(glm::radians(17.5f)));
 
         if (toggleFlash) {
             ourShader.setFloat("toggleFlash", 1.0f);
+        } else {
+            ourShader.setFloat("toggleFlash", 0.0f);
         }
 
         ourShader.setMat4("model", model);
