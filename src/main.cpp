@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "shader.h"
@@ -294,6 +295,13 @@ float solidCube[] = {
     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 };
 
+glm::vec3 pointLightPositions[] = {
+	glm::vec3( 0.7f,  0.2f,  2.0f),
+	glm::vec3( 2.3f, -3.3f, -4.0f),
+	glm::vec3(-4.0f,  2.0f, -12.0f),
+	glm::vec3( 0.0f,  0.0f, -3.0f)
+};  
+
 int main()
 {
     // Setting up Window Object
@@ -444,7 +452,7 @@ int main()
         }
 
         lightPos.x = std::cos(lightAngle) * 4.0f;
-        lightPos.z = std::cos(lightAngle) * 4.0f;
+        lightPos.z = std::sin(lightAngle) * 4.0f;
 
         // Matrices
         // Model
@@ -491,6 +499,17 @@ int main()
         ourShader.setVec3("flashLight.direction", cam.getFront());
         ourShader.setFloat("flashLight.radius", glm::cos(glm::radians(12.5f)));
         ourShader.setFloat("flashLight.outerRadius", glm::cos(glm::radians(17.5f)));
+
+        for (int i = 0; i < 4; i++) {
+            const std::string lightName = "pointLights[" + std::to_string(i) + "].";
+            ourShader.setVec3(lightName + "position", pointLightPositions[i]);
+            ourShader.setVec3(lightName + "ambient", ambientColor);
+            ourShader.setVec3(lightName + "diffuse", diffuseColor);
+            ourShader.setVec3(lightName + "specular", lightColor);
+            ourShader.setFloat(lightName + "constant", 1.0f);
+            ourShader.setFloat(lightName + "linear", 0.09f);
+            ourShader.setFloat(lightName + "quadratic", 0.032f);
+        }
 
         if (toggleFlash) {
             ourShader.setFloat("toggleFlash", 1.0f);
